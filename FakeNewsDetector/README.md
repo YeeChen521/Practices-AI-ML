@@ -547,35 +547,6 @@ learning_rate=5e-6
 # Train 3-5 models with different seeds, average predictions
 ```
 
-## Troubleshooting
-
-### CUDA Out of Memory
-
-```python
-# Reduce batch size
-per_device_train_batch_size=8
-
-# Reduce sequence length
-max_length=128
-
-# Use gradient accumulation
-gradient_accumulation_steps=2
-```
-
-### Poor Performance
-
-- Check class balance in splits
-- Verify labels are correct (1=fake, 0=true)
-- Increase training epochs
-- Try unfreezing base BERT layers
-
-### Notebook Crashes
-
-- Restart kernel and clear outputs
-- Run cells sequentially
-- Check available RAM/GPU memory
-- Reduce dataset size for testing
-
 ## Future Improvements
 
 1. **Multi-Modal Analysis**: Incorporate images from articles
