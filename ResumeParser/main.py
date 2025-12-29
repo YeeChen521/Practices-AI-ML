@@ -3,11 +3,17 @@ import torch
 import requests
 import re
 import numpy as np
+import os
+from dotenv import load_dotenv
 from transformers import AutoTokenizer, DistilBertForSequenceClassification
 import torch.nn.functional as F
 
 MODEL_PATH = "./final_model"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "mistralai/mistral-7b-instruct:free")
+OPENROUTER_URL = os.getenv("OPENROUTER_URL")
 
 OPENROUTER_API_KEY = "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"
 OPENROUTER_MODEL = "mistralai/mistral-7b-instruct:free"
@@ -123,15 +129,15 @@ print(f"Match Score: {feedback['match_score']}%")
 
 print("\nStrengths:")
 for s in feedback["strengths"]:
-    print(",", s)
+    print("-", s)
     
 print("\nMissing Skills:")
 for m in feedback["missing_skills"]:
-    print(",", m)
+    print("-", m)
     
 print("\nResume Improvement Suggestions:")
 for r in feedback["resume_improvements"]:
-    print(",", r)
+    print("-", r)
     
 print("\nOverall Feedback:")
 print(feedback["overall_feedback"])
