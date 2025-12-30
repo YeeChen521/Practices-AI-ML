@@ -8,17 +8,14 @@ from dotenv import load_dotenv
 from transformers import AutoTokenizer, DistilBertForSequenceClassification
 import torch.nn.functional as F
 
+load_dotenv()
+
 MODEL_PATH = "./final_model"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "mistralai/mistral-7b-instruct:free")
-OPENROUTER_URL = os.getenv("OPENROUTER_URL")
-
-OPENROUTER_API_KEY = "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"
 OPENROUTER_MODEL = "mistralai/mistral-7b-instruct:free"
-
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completionsL"
 
 JOB_LIST = ['HR', 'designer', 'Information-Technology',
        'Teacher', 'Advocate', 'Business-Development',
