@@ -1,270 +1,190 @@
-# Resume Job Category Classifier
+# AI Resume-Job Description Matching System
 
-A deep learning-based multi-class classifier that automatically categorizes resumes into 24 different job categories using DistilBERT, achieving **87.67% test accuracy** through fine-tuning with class balancing and weighted loss.
+An intelligent resume screening system combining **DistilBERT classification** (87.67% accuracy) with **LLM-powered analysis** using Mistral-7B to match resumes against job descriptions and provide actionable hiring insights.
 
 ## Overview
 
-This project implements an intelligent resume screening system that can automatically classify resumes into their appropriate job categories. The model processes resume text and assigns it to one of 24 professional categories, making it ideal for automated recruitment systems, job portals, and HR departments.
+This system revolutionizes resume screening by providing:
+1. **Automated Job Category Classification** (24 categories)
+2. **Resume-JD Match Scoring** (0-100%)
+3. **Skills Gap Analysis** (identifying missing skills)
+4. **Actionable Improvement Suggestions**
+5. **Comprehensive Hiring Insights**
+
+Perfect for HR professionals, recruiters, and hiring managers who need to:
+- Screen hundreds of resumes efficiently
+- Identify the best candidates quickly
+- Provide constructive feedback to applicants
+- Reduce unconscious bias in hiring
+
+## System Architecture
+
+```
+┌──────────────────┐
+│  Resume Input    │
+└────────┬─────────┘
+         │
+         ▼
+┌─────────────────────────────┐
+│  DistilBERT Classifier      │
+│  (87.67% accuracy)          │
+│  Predicts: HR, IT, Finance, │
+│  Engineering, etc. (24 cat) │
+└────────┬────────────────────┘
+         │
+         │ Category + Confidence
+         ▼
+┌──────────────────┐
+│ Job Description  │
+└────────┬─────────┘
+         │
+         ▼
+┌─────────────────────────────┐
+│   LLM Analyzer              │
+│   (Mistral-7B)              │
+│   - Match Scoring           │
+│   - Strengths Analysis      │
+│   - Missing Skills          │
+│   - Improvement Suggestions │
+└────────┬────────────────────┘
+         │
+         ▼
+┌─────────────────────────────┐
+│   Hiring Decision Report    │
+│   - Match Score: X%         │
+│   - Strengths: [...]        │
+│   - Missing Skills: [...]   │
+│   - Improvements: [...]     │
+│   - Overall Feedback        │
+└─────────────────────────────┘
+```
 
 ## Performance Metrics
 
+### DistilBERT Classifier
 - **Test Accuracy**: 87.67%
-- **Macro F1 Score**: 87%
+- **Macro F1**: 87%
 - **Macro Precision**: 89%
 - **Macro Recall**: 87%
 
-### Per-Category Performance Highlights
+### Category-Specific Performance
 
-**Perfect Classification (100% F1)**:
-- HR (1.00 precision, 1.00 recall)
-- Business Development (1.00/1.00)
-- Finance (1.00/1.00)
-- Accountant (1.00/1.00)
+**Excellent (F1 > 0.95)**:
+- HR, Finance, Accountant, Business Development (100%)
+- Chef, Consultant, Engineering (97%)
 
-**Strong Performance (>95% F1)**:
-- Engineering (0.95/1.00, F1: 0.97)
-- Chef (0.94/1.00, F1: 0.97)
-- Consultant (0.93/1.00, F1: 0.97)
-- Designer (0.93/1.00, F1: 0.96)
-- Information Technology (1.00/0.92, F1: 0.96)
+**Good (F1: 0.80-0.95)**:
+- IT, Teacher, Healthcare, Construction, Sales (88-96%)
 
-## Why DistilBERT?
+**Challenging (F1 < 0.80)**:
+- Automobile (55%), Apparel (70%), Agriculture (69%)
+- These categories require additional manual review
 
-### Model Selection Rationale
+## Key Features
 
-**DistilBERT (distilbert-base-uncased)** was selected as the optimal architecture for resume classification due to several key advantages:
-
-#### 1. **Efficiency Without Sacrificing Performance**
-- **40% smaller** than BERT (66M vs 110M parameters)
-- **60% faster** inference time
-- Only ~3-5% accuracy drop compared to full BERT
-- Perfect for production deployment in HR systems
-
-#### 2. **Strong Transfer Learning from BERT**
-- Trained via **knowledge distillation** from BERT-base
-- Retains 97% of BERT's language understanding
-- Pre-trained on same corpus (Wikipedia + BookCorpus)
-- Understands professional terminology and context
-
-#### 3. **Optimized for Text Classification**
-- Proven performance on multi-class classification tasks
-- Handles professional documents well
-- Captures semantic meaning of job descriptions and skills
-- Effective with 512-token context window
-
-#### 4. **Multi-Class Classification Capability**
-- Successfully handles 24 distinct job categories
-- Learns subtle differences between similar roles:
-  - HR vs Public Relations
-  - Engineering vs Information Technology
-  - Sales vs Business Development
-  - Consultant vs Advocate
-
-#### 5. **Resource-Friendly for Production**
-- Lower inference latency (critical for real-time screening)
-- Reduced memory footprint
-- Can process more resumes per second
-- Cost-effective for large-scale deployment
-
-#### 6. **Resume-Specific Advantages**
-- Captures key information:
-  - Skills and technologies mentioned
-  - Job titles and roles
-  - Educational qualifications
-  - Industry-specific terminology
-  - Project descriptions and achievements
-
-### Why Not Other Models?
-
-| Model | Pros | Cons | Why Not Selected |
-|-------|------|------|------------------|
-| **BERT-base** | Highest accuracy, robust | 110M params, slower inference | Marginal gain doesn't justify 60% speed penalty |
-| **RoBERTa** | More robust training | 125M params, even slower | Overkill for resume classification |
-| **LSTM/BiLSTM** | Fast, simple | Poor at capturing context, lower accuracy | Insufficient for nuanced job categorization |
-| **Word2Vec + SVM** | Very fast, interpretable | No context understanding, misses semantic meaning | Too simplistic for professional documents |
-| **GPT-2/3** | Strong language model | Unidirectional, designed for generation | Not optimized for classification tasks |
-| **ALBERT** | Parameter efficient | Slower than DistilBERT despite fewer params | Speed vs accuracy trade-off favors DistilBERT |
-
-**DistilBERT provides the sweet spot: BERT-level accuracy with production-ready speed and efficiency.**
-
-## Dataset
-
-**Source**: [Resume Dataset](https://www.kaggle.com/datasets/snehaanbhawal/resume-dataset) (Kaggle)
-
-### Job Categories (24 Classes)
-
+### 1. **Intelligent Resume Classification**
 ```python
-Categories:
-1. HR                        13. Digital-Media
-2. Designer                  14. Automobile
-3. Information-Technology    15. Chef
-4. Teacher                   16. Finance
-5. Advocate                  17. Apparel
-6. Business-Development      18. Engineering
-7. Healthcare                19. Accountant
-8. Fitness                   20. Construction
-9. Agriculture               21. Public-Relations
-10. BPO                      22. Banking
-11. Sales                    23. Arts
-12. Consultant               24. Aviation
+Category: Information-Technology
+Confidence: 92.45%
+```
+- Automatically categorizes resumes into 24 job categories
+- High confidence predictions (>80%) for most categories
+- Fast classification (<100ms per resume)
+
+### 2. **Resume-JD Match Scoring**
+```json
+{
+  "match_score": 85,
+  "strengths": [
+    "5 years Python experience matches requirement",
+    "ML/AI expertise aligns with role needs",
+    "Strong technical background in data science"
+  ],
+  "missing_skills": [
+    "Kubernetes/Docker experience not mentioned",
+    "AWS certification preferred but not listed"
+  ],
+  "resume_improvements": [
+    "Quantify achievements (e.g., 'Improved model accuracy by 20%')",
+    "Add specific tools/frameworks used in each project",
+    "Include leadership experience in team management"
+  ],
+  "overall_feedback": "Strong technical match with 85% alignment..."
+}
 ```
 
-### Dataset Statistics
+### 3. **Skills Gap Analysis**
+- Identifies exactly what candidates are missing
+- Helps prioritize training needs
+- Guides interview focus areas
 
-```
-Original Dataset: Imbalanced
-Total samples used: 5,000 (after balancing)
+### 4. **Actionable Feedback**
+- Specific improvement suggestions
+- Quantifiable recommendations
+- Helps candidates strengthen applications
 
-Split:
-- Training: 3,500 samples (70%)
-- Validation: 750 samples (15%)
-- Test: 750 samples (15%)
+## Why This Architecture?
 
-After Oversampling:
-All classes balanced to max class count
-Each category: ~208 samples (balanced)
-```
+### Why DistilBERT for Stage 1?
 
-### Data Preprocessing
+#### **Fast & Accurate Initial Classification**
+- 87.67% accuracy across 24 job categories
+- 40% smaller than BERT (66M vs 110M parameters)
+- 60% faster inference time
+- Perfect for high-volume screening
 
-#### Class Imbalance Handling
+#### **Multi-Class Excellence**
+- Handles 24 distinct job categories
+- Learns subtle differences between similar roles
+- Strong performance on technical roles (IT, Engineering)
+- Robust to diverse resume formats
 
-The original dataset had significant class imbalance. The notebook implements **oversampling**:
+#### **Production-Ready**
+- Low memory footprint
+- Fast inference (<100ms)
+- GPU/CPU support
+- Batch processing capable
 
-```python
-Strategy:
-1. Identify class with maximum samples
-2. Oversample minority classes by repeating samples
-3. Balance all classes to match maximum count
-4. Shuffle to prevent sequential bias
-```
+### Why LLM (Mistral-7B) for Stage 2?
 
-**Why oversampling?**
-- Prevents model bias toward majority classes
-- Ensures fair learning for all job categories
-- Improves recall for underrepresented categories
-- More effective than undersampling (no data loss)
+#### **Deep Resume-JD Analysis**
+- Understands job requirements semantically
+- Compares qualifications vs requirements
+- Identifies both technical and soft skills
+- Provides human-interpretable reasoning
 
-## Technical Architecture
+#### **Structured Feedback Generation**
+- Match scoring (0-100%)
+- Strengths identification
+- Skills gap analysis
+- Actionable recommendations
 
-### Model Specifications
+#### **Mistral-7B Advantages**
+- Free tier via OpenRouter
+- Strong instruction following
+- Consistent JSON output
+- Good balance of speed/quality
+- Understands HR/recruitment context
 
-```
-Architecture: DistilBERT-base-uncased
-- Parameters: 66M (40% fewer than BERT)
-- Encoder Layers: 6 (vs BERT's 12)
-- Attention Heads: 12
-- Hidden Size: 768
-- Vocabulary: 30,522 WordPiece tokens
-- Max Sequence Length: 512 tokens
-- Output: 24-class softmax classifier
-```
+### Why Two Stages?
 
-### Advanced Training Techniques
+| Aspect | DistilBERT Only | LLM Only | DistilBERT + LLM |
+|--------|-----------------|----------|------------------|
+| **Speed** | Very Fast | Slow | Fast initial + targeted analysis |
+| **Accuracy** | 87.67% category | No category | Category + detailed matching |
+| **Feedback** | None | Full analysis | Category + comprehensive feedback |
+| **Cost** | Low | High per resume | Moderate (selective LLM use) |
+| **Scalability** | Excellent | Poor | Good (batch BERT, selective LLM) |
+| **Explainability** | Confidence only | Full reasoning | Both statistical + reasoning |
 
-#### 1. **Weighted Cross-Entropy Loss**
-
-Despite oversampling, class weights are used for extra robustness:
-
-```python
-class WeightedTrainer(Trainer):
-    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
-        labels = inputs.pop("labels")
-        outputs = model(**inputs)
-        logits = outputs.logits
-        
-        # Weighted loss based on inverse class frequency
-        loss_fct = CrossEntropyLoss(weight=class_weight)
-        loss = loss_fct(logits, labels)
-        return (loss, outputs) if return_outputs else loss
-```
-
-**Why weighted loss?**
-- Double protection against class imbalance
-- Penalizes misclassifications of minority classes more
-- Improves macro F1 score (treats all classes equally)
-- Essential for fair performance across all job categories
-
-#### 2. **Regularization Strategy**
-
-```python
-Dropout Configuration:
-- Hidden Dropout: 0.3
-- Attention Dropout: 0.3
-- Weight Decay: 0.05
-
-Purpose:
-- Prevents overfitting on repeated samples
-- Reduces memorization of specific resumes
-- Improves generalization to new resumes
-```
-
-#### 3. **Training Configuration**
-
-```python
-Hyperparameters:
-- Learning Rate: 5e-5 (higher than typical BERT fine-tuning)
-- Batch Size: 16 per device
-- Epochs: 4 (with early stopping)
-- Weight Decay: 0.05 (L2 regularization)
-- Warmup Ratio: 0.1 (gradual LR warmup)
-- Optimizer: AdamW (built into Trainer)
-- Mixed Precision: FP16 (faster training)
-```
-
-**Why 5e-5 learning rate?**
-- DistilBERT can handle slightly higher LR than BERT
-- Faster convergence on smaller model
-- Multi-class classification benefits from faster learning
-- Still conservative enough to avoid catastrophic forgetting
-
-#### 4. **Early Stopping**
-
-```python
-callbacks=[EarlyStoppingCallback(early_stopping_patience=2)]
-```
-
-Stops training if validation F1 doesn't improve for 2 consecutive epochs, preventing overfitting.
-
-### Input Processing
-
-```python
-Tokenization:
-- Max Length: 512 tokens (full DistilBERT capacity)
-- Padding: Max length (fixed size)
-- Truncation: Enabled (handles long resumes)
-- Field: "resume_str" (full resume text)
-```
-
-**Why 512 tokens?**
-- Resumes can be lengthy (1-2 pages)
-- Need full context to capture all skills and experience
-- Critical information often appears throughout document
-- 512 tokens ≈ 400-450 words (sufficient for most resumes)
-
-### Training Progress
-
-```
-Epoch 1: Loss 2.848, Val Acc: 52.28%, Val F1: 40.86%
-Epoch 2: Loss 1.518, Val Acc: 78.28%, Val F1: 75.54%
-Epoch 3: Loss 0.793, Val Acc: 87.13%, Val F1: 86.60%
-Epoch 4: Loss 0.503, Val Acc: 87.94%, Val F1: 87.55%
-
-Final Test Accuracy: 87.67%
-```
-
-**Key Observations**:
-- Significant improvement from epoch 1 to 2 (52% → 78%)
-- Strong gains in epoch 3 (78% → 87%)
-- Convergence by epoch 4
-- Test accuracy consistent with validation (good generalization)
+**Result**: Fast screening (DistilBERT) + deep analysis (LLM) = Best hiring decisions
 
 ## Installation
 
 ### Requirements
 
 ```bash
-pip install torch transformers datasets evaluate kagglehub scikit-learn numpy pandas matplotlib
+pip install torch transformers datasets evaluate kagglehub scikit-learn numpy pandas matplotlib requests python-dotenv
 ```
 
 ### Full Dependencies
@@ -279,518 +199,590 @@ scikit-learn>=1.2.0
 numpy>=1.24.0
 pandas>=2.0.0
 matplotlib>=3.7.0
+requests>=2.28.0
+python-dotenv>=1.0.0
+```
+
+### Setup
+
+1. **Train the DistilBERT model** (or download pre-trained):
+```bash
+jupyter notebook training_notebook.ipynb
+# Run all cells to train and save to ./final_model
+```
+
+2. **Set up OpenRouter API**:
+```bash
+# Create .env file
+echo "OPENROUTER_API_KEY=your_key_here" > .env
+```
+
+Get your free API key from [OpenRouter](https://openrouter.ai/)
+
+3. **Run the system**:
+```bash
+python main.py
 ```
 
 ## Usage
 
-### 1. Training the Model
-
-Run the Jupyter Notebook cells sequentially:
+### Interactive Mode
 
 ```bash
-jupyter notebook resume_classifier.ipynb
+python main.py
 ```
 
-Or convert to script:
+**Example Session**:
+```
+=== Resume—JD Matching Assistant ===
 
-```bash
-jupyter nbconvert --to script resume_classifier.ipynb
-python resume_classifier.py
+Paste your resume here: 
+
+Software Engineer with 5 years of experience in Python, machine learning, and web 
+development. Proficient in TensorFlow, PyTorch, Django, and React. Led development 
+of ML-powered recommendation system. Strong background in data structures, 
+algorithms, and system design. Bachelor's in Computer Science.
+
+Paste the job description here: 
+
+Senior ML Engineer position requiring 5+ years Python experience, expertise in 
+TensorFlow/PyTorch, experience with cloud platforms (AWS/GCP), and proven track 
+record in deploying ML models to production. Docker/Kubernetes knowledge preferred.
+
+=== Resume Classification ===
+Predicted Category: Information-Technology
+Confidence: 92.45%
+
+=== Job Match Feedback ===
+Match Score: 78%
+
+Strengths:
+- 5 years Python experience directly matches requirement
+- TensorFlow and PyTorch expertise aligns perfectly with role
+- ML background with recommendation system shows practical experience
+- Strong CS fundamentals mentioned (data structures, algorithms)
+
+Missing Skills:
+- Cloud platform experience (AWS/GCP) not mentioned
+- Docker/Kubernetes containerization knowledge absent
+- Production deployment experience unclear
+- Specific details on ML model deployment pipeline missing
+
+Resume Improvement Suggestions:
+- Add cloud platform certifications or project experience (AWS/GCP)
+- Include containerization tools (Docker, Kubernetes) if used
+- Quantify achievements: "Improved recommendation accuracy by X%"
+- Specify scale of systems worked on (users, data volume, throughput)
+- Add production ML deployment details and monitoring experience
+
+Overall Feedback:
+Strong technical foundation with 78% match. Primary gaps are in cloud infrastructure 
+and production deployment experience. Consider highlighting any cloud platform usage 
+or adding relevant certifications before applying.
 ```
 
-### 2. Using the Trained Model
+### Programmatic Usage
 
 ```python
-from transformers import AutoTokenizer, DistilBertForSequenceClassification
-import torch
+from main import predict_category, call_openrouter, build_prompt
 
-# Load model and tokenizer
-model = DistilBertForSequenceClassification.from_pretrained("./FakeNewsDetector/final_model")
-tokenizer = AutoTokenizer.from_pretrained("./FakeNewsDetector/final_model")
-model.eval()
+# Stage 1: Classify resume
+resume_text = "Your resume text here..."
+category, confidence = predict_category(resume_text)
 
-# Job categories
-job_categories = [
-    'HR', 'Designer', 'Information-Technology', 'Teacher', 'Advocate',
-    'Business-Development', 'Healthcare', 'Fitness', 'Agriculture', 'BPO',
-    'Sales', 'Consultant', 'Digital-Media', 'Automobile', 'Chef',
-    'Finance', 'Apparel', 'Engineering', 'Accountant', 'Construction',
-    'Public-Relations', 'Banking', 'Arts', 'Aviation'
-]
+print(f"Category: {category}")
+print(f"Confidence: {confidence*100:.2f}%")
 
-def classify_resume(resume_text):
+# Stage 2: Match against job description
+jd_text = "Job description text here..."
+prompt = build_prompt(resume_text, jd_text, category, confidence)
+feedback = call_openrouter(prompt)
+
+print(f"Match Score: {feedback['match_score']}%")
+print(f"Strengths: {feedback['strengths']}")
+print(f"Missing Skills: {feedback['missing_skills']}")
+print(f"Improvements: {feedback['resume_improvements']}")
+```
+
+### Batch Processing Multiple Resumes
+
+```python
+def screen_resumes_for_job(resumes, job_description, min_match_score=70):
     """
-    Classify a resume into one of 24 job categories
+    Screen multiple resumes against a single job description
     
     Args:
-        resume_text (str): Full text of the resume
+        resumes: List of resume texts
+        job_description: JD text
+        min_match_score: Minimum match score threshold (0-100)
         
     Returns:
-        tuple: (predicted_category, confidence_score, top_3_predictions)
+        List of dicts with resume analysis
     """
-    # Tokenize
+    results = []
+    
+    for i, resume in enumerate(resumes):
+        # Stage 1: Quick classification
+        category, confidence = predict_category(resume)
+        
+        # Stage 2: Detailed matching
+        prompt = build_prompt(resume, job_description, category, confidence)
+        feedback = call_openrouter(prompt)
+        
+        if feedback['match_score'] >= min_match_score:
+            results.append({
+                'resume_id': i,
+                'category': category,
+                'confidence': confidence,
+                'match_score': feedback['match_score'],
+                'strengths': feedback['strengths'],
+                'missing_skills': feedback['missing_skills'],
+                'improvements': feedback['resume_improvements'],
+                'overall': feedback['overall_feedback']
+            })
+    
+    # Sort by match score (highest first)
+    results.sort(key=lambda x: x['match_score'], reverse=True)
+    return results
+
+# Example: Screen 50 resumes for a job
+top_candidates = screen_resumes_for_job(
+    resumes=all_resumes,
+    job_description=jd_text,
+    min_match_score=75
+)
+
+print(f"Found {len(top_candidates)} candidates above 75% match")
+for i, candidate in enumerate(top_candidates[:10], 1):
+    print(f"{i}. Match: {candidate['match_score']}% - {candidate['category']}")
+```
+
+## System Components
+
+### 1. Resume Classifier (`predict_category`)
+
+**Purpose**: Fast job category prediction
+
+```python
+def predict_category(resume_text):
     inputs = tokenizer(
         resume_text,
         max_length=512,
         truncation=True,
         padding="max_length",
         return_tensors="pt"
-    )
+    ).to(DEVICE)
     
-    # Predict
     with torch.no_grad():
         outputs = model(**inputs)
-        probabilities = torch.softmax(outputs.logits, dim=1)[0]
+        logits = outputs.logits
         
-    # Get top prediction
-    predicted_idx = torch.argmax(probabilities).item()
-    confidence = probabilities[predicted_idx].item() * 100
+    probs = F.softmax(logits, dim=-1)
+    pred_idx = torch.argmax(probs, dim=-1).item()
+    confidence = probs[0, pred_idx].item()
     
-    # Get top 3 predictions
-    top3_probs, top3_indices = torch.topk(probabilities, 3)
-    top3_predictions = [
-        (job_categories[idx], prob.item() * 100)
-        for idx, prob in zip(top3_indices, top3_probs)
-    ]
+    return JOB_LIST[pred_idx], confidence
+```
+
+**Features**:
+- Processes 512 tokens (full resumes)
+- Returns category + confidence
+- GPU accelerated
+- <100ms inference time
+
+### 2. Resume-JD Matcher (`call_openrouter`)
+
+**Purpose**: Deep matching analysis and feedback
+
+**Prompt Engineering**:
+```python
+def build_prompt(resume, jd, category, confidence):
+    return f"""
+    You are an AI resume evaluation assistant.
+    The resume was classified as "{category}" with {confidence:.2f} confidence.
     
-    return job_categories[predicted_idx], confidence, top3_predictions
-
-# Example usage
-resume_text = """
-Software Engineer with 5 years of experience in Python, machine learning,
-and web development. Proficient in TensorFlow, PyTorch, Django, and React.
-Led development of ML-powered recommendation system. Strong background in
-data structures, algorithms, and system design. Bachelor's in Computer Science.
-"""
-
-category, confidence, top3 = classify_resume(resume_text)
-
-print(f"Predicted Category: {category}")
-print(f"Confidence: {confidence:.2f}%")
-print(f"\nTop 3 Predictions:")
-for cat, prob in top3:
-    print(f"  {cat}: {prob:.2f}%")
+    Analyze the resume against the job description.
+    
+    Resume: "{resume}"
+    Job Description: "{jd}"
+    
+    Return ONLY valid JSON:
+    {{
+        "match_score": 0-100,
+        "strengths": [list of strengths],
+        "missing_skills": [list of gaps],
+        "resume_improvements": [list of suggestions],
+        "overall_feedback": "comprehensive summary"
+    }}
+    """
 ```
 
-**Example Output**:
-```
-Predicted Category: Information-Technology
-Confidence: 92.45%
+**Why This Prompt Works**:
+- Clear role and task definition
+- Structured output format (JSON)
+- Explicit analysis dimensions
+- Temperature=0.3 for consistency
+- Prevents verbose explanations
 
-Top 3 Predictions:
-  Information-Technology: 92.45%
-  Engineering: 4.32%
-  Digital-Media: 1.87%
-```
-
-### 3. Batch Processing
+### 3. JSON Extraction (`extract_json`)
 
 ```python
-def classify_resumes_batch(resume_texts, batch_size=8):
-    """Process multiple resumes efficiently"""
-    results = []
-    
-    for i in range(0, len(resume_texts), batch_size):
-        batch = resume_texts[i:i+batch_size]
-        
-        inputs = tokenizer(
-            batch,
-            max_length=512,
-            truncation=True,
-            padding="max_length",
-            return_tensors="pt"
-        )
-        
-        with torch.no_grad():
-            outputs = model(**inputs)
-            predictions = torch.argmax(outputs.logits, dim=1)
-            confidences = torch.softmax(outputs.logits, dim=1).max(dim=1)[0]
-        
-        for pred, conf in zip(predictions, confidences):
-            results.append({
-                'category': job_categories[pred.item()],
-                'confidence': conf.item() * 100
-            })
-    
-    return results
-
-# Process multiple resumes
-resumes = [resume1, resume2, resume3, ...]
-results = classify_resumes_batch(resumes)
-
-for i, result in enumerate(results):
-    print(f"Resume {i+1}: {result['category']} ({result['confidence']:.1f}%)")
+def extract_json(text):
+    match = re.search(r"\{[\s\S]*\}", text)
+    if not match:
+        raise ValueError("No JSON object found")
+    return json.loads(match.group())
 ```
 
-## Model Performance Analysis
+**Robust Parsing**:
+- Handles markdown code blocks
+- Extracts JSON from verbose responses
+- Regex-based for reliability
+- Clear error messages
 
-### Classification Report (Test Set)
+## Training the Model
 
+### Dataset
+
+**Source**: [Resume Dataset](https://www.kaggle.com/datasets/snehaanbhawal/resume-dataset)
+
+**Categories** (24):
 ```
-Category                 Precision  Recall   F1-Score  Support
-─────────────────────────────────────────────────────────────
-HR                       1.00       1.00     1.00      12
-Designer                 0.93       1.00     0.96      13
-Information-Technology   1.00       0.92     0.96      12
-Teacher                  0.90       0.95     0.92      19
-Advocate                 0.72       0.81     0.76      16
-Business-Development     1.00       1.00     1.00      17
-Healthcare               1.00       0.83     0.91      12
-Fitness                  0.80       0.86     0.83      14
-Agriculture              0.91       0.56     0.69      18
-BPO                      0.83       1.00     0.90      19
-Sales                    0.85       0.92     0.88      12
-Consultant               0.93       1.00     0.97      14
-Digital-Media            0.80       0.86     0.83      14
-Automobile               0.50       0.62     0.55      13
-Chef                     0.94       1.00     0.97      17
-Finance                  1.00       1.00     1.00      17
-Apparel                  1.00       0.54     0.70      13
-Engineering              0.95       1.00     0.97      18
-Accountant               1.00       1.00     1.00      16
-Construction             0.89       1.00     0.94      17
-Public-Relations         0.72       0.81     0.76      16
-─────────────────────────────────────────────────────────────
-Accuracy                                      0.88      373
-Macro Avg                0.89      0.87     0.87      373
-Weighted Avg             0.89      0.88     0.87      373
+HR, Designer, Information-Technology, Teacher, Advocate, 
+Business-Development, Healthcare, Fitness, Agriculture, BPO, 
+Sales, Consultant, Digital-Media, Automobile, Chef, Finance, 
+Apparel, Engineering, Accountant, Construction, Public-Relations, 
+Banking, Arts, Aviation
 ```
 
-### Performance Insights
+**Statistics**:
+```
+After Oversampling:
+- Total: 5,000 samples
+- Per category: ~208 samples (balanced)
+- Train: 3,500 (70%)
+- Validation: 750 (15%)
+- Test: 750 (15%)
+```
 
-#### Excellent Performance (F1 > 0.95)
-- **HR, Finance, Accountant, Business-Development**: Perfect classification
-- **Engineering, Chef, Consultant**: Near-perfect with minor recall issues
-- **Strong distinction** between technical and non-technical roles
+### Training Configuration
 
-#### Good Performance (F1: 0.80-0.95)
-- **IT, Teacher, Healthcare, Construction, Sales**: Solid performance
-- **Slight confusion** between overlapping domains
+```python
+Model: distilbert-base-uncased
+Max Length: 512 tokens (full resumes)
+Batch Size: 16
+Learning Rate: 5e-5
+Epochs: 4
+Weight Decay: 0.05
+Dropout: 0.3
+Weighted Loss: Yes (addresses class imbalance)
+```
 
-#### Challenging Categories (F1 < 0.80)
-- **Automobile** (0.55): Lowest performance - low precision (50%) and recall (62%)
-- **Agriculture** (0.69): Low recall (56%) - often misclassified as other outdoor/manual roles
-- **Apparel** (0.70): Very low recall (54%) - strong overlap with Designer/Arts
-- **Advocate** (0.76): Moderate performance - confused with Public Relations
-- **Public-Relations** (0.76): Similar confusion with Advocate
-- **Fitness** (0.83): Confused with Healthcare category
-- **Digital-Media** (0.83): Overlaps with IT and Designer roles
+### Advanced Techniques
 
-### Common Misclassifications
+#### **Oversampling for Class Balance**
+```python
+# Balance all classes to maximum count
+for label in label_count.keys():
+    class_dataset = full_dataset.filter(lambda x: x["label"] == label)
+    repeat_factor = max_count // len(class_dataset) + 1
+    oversampled_class_dataset = concatenate_datasets([class_dataset] * repeat_factor)
+```
 
-**Similar Role Confusion**:
-- Information-Technology ↔ Engineering
-- Advocate ↔ Public Relations (72-74% precision for both)
-- Fitness ↔ Healthcare
-- Designer ↔ Arts ↔ Apparel
-- Digital-Media ↔ Information-Technology
+#### **Weighted Cross-Entropy Loss**
+```python
+class WeightedTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        labels = inputs.pop("labels")
+        outputs = model(**inputs)
+        logits = outputs.logits
+        
+        # Weight inversely proportional to class frequency
+        loss_fct = CrossEntropyLoss(weight=class_weight)
+        loss = loss_fct(logits, labels)
+        return (loss, outputs) if return_outputs else loss
+```
 
-**Why these confusions occur**:
-- Overlapping skill sets (e.g., IT and Engineering both require technical skills)
-- Similar job descriptions (e.g., Advocate and Public Relations both involve communication)
-- Interdisciplinary roles (e.g., Digital Media spans design and technology)
-- Ambiguous resume wording
-- Automobile category is too broad (includes engineering, sales, design roles)
+**Why weighted loss?**
+- Double protection against imbalance
+- Penalizes minority class errors more
+- Improves macro F1 score
+- Fair performance across all categories
+
+### Training Results
+
+```
+Epoch 1: Loss 2.848, Val Acc: 52.28%, Val F1: 40.86%
+Epoch 2: Loss 1.518, Val Acc: 78.28%, Val F1: 75.54%
+Epoch 3: Loss 0.793, Val Acc: 87.13%, Val F1: 86.60%
+Epoch 4: Loss 0.503, Val Acc: 87.94%, Val F1: 87.55%
+
+Final Test Accuracy: 87.67%
+Training Time: ~3 minutes on GPU
+```
 
 ## Real-World Applications
 
-### 1. **Automated Resume Screening**
+### 1. **High-Volume Recruitment**
+
 ```python
-# Filter resumes for specific job opening
-def screen_resumes_for_job(resumes, target_category, min_confidence=80):
-    matches = []
+def screen_applications(job_posting_id, resume_database):
+    """Screen 1000+ resumes in minutes"""
+    jd = get_job_description(job_posting_id)
+    resumes = get_all_applications(job_posting_id)
+    
+    # Stage 1: Fast DistilBERT classification
+    classified = [(r, *predict_category(r)) for r in resumes]
+    
+    # Filter by category match
+    relevant = [r for r, cat, conf in classified 
+                if cat in jd['target_categories'] and conf > 0.7]
+    
+    # Stage 2: LLM detailed matching (only top candidates)
+    top_matches = []
+    for resume in relevant[:50]:  # Top 50 by confidence
+        feedback = call_openrouter(build_prompt(resume, jd['text'], ...))
+        if feedback['match_score'] >= 75:
+            top_matches.append((resume, feedback))
+    
+    return sorted(top_matches, key=lambda x: x[1]['match_score'], reverse=True)
+```
+
+### 2. **Candidate Feedback System**
+
+```python
+def provide_application_feedback(resume_text, job_description):
+    """Give candidates actionable feedback"""
+    category, confidence = predict_category(resume_text)
+    prompt = build_prompt(resume_text, job_description, category, confidence)
+    feedback = call_openrouter(prompt)
+    
+    return {
+        'suitable': feedback['match_score'] >= 60,
+        'match_percentage': feedback['match_score'],
+        'your_strengths': feedback['strengths'],
+        'skills_to_develop': feedback['missing_skills'],
+        'how_to_improve': feedback['resume_improvements'],
+        'interviewer_feedback': feedback['overall_feedback']
+    }
+```
+
+### 3. **Internal Mobility & Career Pathing**
+
+```python
+def find_internal_opportunities(employee_resume, open_positions):
+    """Match employees to internal job openings"""
+    opportunities = []
+    
+    for position in open_positions:
+        feedback = call_openrouter(
+            build_prompt(employee_resume, position['jd'], ...)
+        )
+        
+        opportunities.append({
+            'role': position['title'],
+            'department': position['department'],
+            'match_score': feedback['match_score'],
+            'transferable_skills': feedback['strengths'],
+            'skills_to_learn': feedback['missing_skills'],
+            'development_plan': feedback['resume_improvements']
+        })
+    
+    return sorted(opportunities, key=lambda x: x['match_score'], reverse=True)
+```
+
+### 4. **Talent Pool Management**
+
+```python
+def build_talent_pool(resumes):
+    """Categorize and analyze talent database"""
+    pool = {}
+    
     for resume in resumes:
-        category, confidence, _ = classify_resume(resume)
-        if category == target_category and confidence >= min_confidence:
-            matches.append((resume, confidence))
-    return sorted(matches, key=lambda x: x[1], reverse=True)
-
-# Example: Find IT candidates
-it_candidates = screen_resumes_for_job(all_resumes, "Information-Technology")
+        category, confidence = predict_category(resume)
+        
+        if category not in pool:
+            pool[category] = []
+        
+        pool[category].append({
+            'resume': resume,
+            'confidence': confidence,
+            'indexed_at': datetime.now()
+        })
+    
+    # Generate pool statistics
+    stats = {cat: len(resumes) for cat, resumes in pool.items()}
+    return pool, stats
 ```
-
-### 2. **Job Recommendation System**
-```python
-def recommend_jobs(resume_text):
-    """Recommend top 3 suitable job categories"""
-    _, _, top3 = classify_resume(resume_text)
-    
-    print("Recommended Job Categories:")
-    for i, (category, prob) in enumerate(top3, 1):
-        print(f"{i}. {category} (Match: {prob:.1f}%)")
-```
-
-### 3. **Resume Quality Check**
-```python
-def check_resume_clarity(resume_text):
-    """Check if resume clearly indicates job category"""
-    category, confidence, top3 = classify_resume(resume_text)
-    
-    if confidence > 90:
-        return "Clear profile", category
-    elif confidence > 70:
-        return "Moderate clarity", category
-    else:
-        return "Ambiguous profile - consider clarifying", top3
-```
-
-### 4. **Skills Gap Analysis**
-```python
-def analyze_career_transition(current_resume, target_category):
-    """Analyze feasibility of career transition"""
-    current_cat, _, top3 = classify_resume(current_resume)
-    
-    # Check if target is in top 3 predictions
-    target_scores = [prob for cat, prob in top3 if cat == target_category]
-    
-    if target_scores:
-        transition_score = target_scores[0]
-        if transition_score > 50:
-            return f"Strong transition potential ({transition_score:.1f}%)"
-        elif transition_score > 20:
-            return f"Moderate transition potential ({transition_score:.1f}%)"
-    
-    return "Significant reskilling required"
-```
-
-## Advanced Features
-
-### 1. **Confidence Threshold Filtering**
-
-```python
-def classify_with_threshold(resume_text, threshold=70):
-    """Only return prediction if confidence exceeds threshold"""
-    category, confidence, top3 = classify_resume(resume_text)
-    
-    if confidence >= threshold:
-        return category, confidence
-    else:
-        return "UNCERTAIN", top3  # Return top 3 for manual review
-```
-
-### 2. **Multi-Label Consideration**
-
-```python
-def get_suitable_categories(resume_text, threshold=20):
-    """Return all categories above threshold (handles multi-skilled candidates)"""
-    _, _, top3 = classify_resume(resume_text)
-    
-    suitable = [cat for cat, prob in top3 if prob >= threshold]
-    return suitable
-
-# Example: Candidate suitable for multiple roles
-categories = get_suitable_categories(resume)
-# Output: ['Information-Technology', 'Engineering', 'Digital-Media']
-```
-
-### 3. **Ensemble Prediction**
-
-```python
-def ensemble_predict(resume_text, models):
-    """Combine predictions from multiple models for robustness"""
-    predictions = []
-    
-    for model in models:
-        category, confidence, _ = classify_resume_with_model(resume_text, model)
-        predictions.append((category, confidence))
-    
-    # Weighted voting
-    category_votes = {}
-    for cat, conf in predictions:
-        category_votes[cat] = category_votes.get(cat, 0) + conf
-    
-    best_category = max(category_votes, key=category_votes.get)
-    avg_confidence = category_votes[best_category] / len(models)
-    
-    return best_category, avg_confidence
-```
-
-## Limitations & Considerations
-
-### Model Limitations
-
-1. **Long Resume Truncation**
-   - 512 tokens ≈ 400-450 words
-   - Multi-page resumes may lose information
-   - Critical details at end might be cut off
-   
-   **Solution**: Extract key sections (skills, experience) for classification
-
-2. **Domain-Specific Jargon**
-   - Model trained on specific dataset
-   - May struggle with uncommon job titles
-   - Industry-specific terminology might confuse model
-   
-   **Solution**: Regular retraining with new resume samples
-
-3. **Multi-Skilled Candidates**
-   - Resumes with diverse experience challenging
-   - Career changers may confuse the model
-   - Freelancers with varied projects
-   
-   **Solution**: Use top-3 predictions, not just top-1
-
-4. **Oversampling Artifacts**
-   - Repeated samples may cause minor overfitting
-   - Model might memorize specific resumes
-   - Dropout helps, but not perfect
-   
-   **Solution**: Use more diverse data when available
-
-5. **Temporal Bias**
-   - Job market evolves (new roles, skills)
-   - Tech skills especially change rapidly
-   - Model trained on historical data
-   
-   **Solution**: Periodic retraining with fresh data
-
-6. **Broad Category Challenges**
-   - **Automobile** category performs worst (F1: 0.55)
-   - Too broad: includes engineers, designers, sales, mechanics
-   - Would benefit from subcategories
-   
-   **Solution**: Consider hierarchical classification for broad categories
 
 ## Performance Optimization
 
-### For Faster Inference
+### For Faster Processing
 
 ```python
-# Reduce sequence length for speed
-max_length=256  # 2x faster, minimal accuracy loss for short resumes
+# Batch DistilBERT predictions
+def predict_batch(resumes):
+    inputs = tokenizer(
+        resumes,
+        max_length=512,
+        truncation=True,
+        padding=True,
+        return_tensors="pt"
+    ).to(DEVICE)
+    
+    with torch.no_grad():
+        outputs = model(**inputs)
+        probs = F.softmax(outputs.logits, dim=-1)
+    
+    return [(JOB_LIST[p.argmax()], p.max().item()) 
+            for p in probs]
 
-# Batch processing
-batch_size=32  # Process multiple resumes simultaneously
-
-# Model quantization
-from transformers import AutoModelForSequenceClassification
-model = AutoModelForSequenceClassification.from_pretrained(
-    "./model",
-    torch_dtype=torch.float16  # Half precision
-)
+# Selective LLM calls
+def smart_matching(resume, jd, category, confidence):
+    # Only use LLM for high-confidence, relevant candidates
+    if confidence < 0.6:
+        return {"match_score": 0, "reason": "Low confidence category"}
+    
+    return call_openrouter(build_prompt(resume, jd, category, confidence))
 ```
 
-### For Better Accuracy
+### For Better Matching Quality
 
 ```python
-# Increase training data
-n_samples=10000  # Use more samples if available
+# Use stronger LLM for important positions
+OPENROUTER_MODEL = "anthropic/claude-3-sonnet"  # Higher quality
 
-# More training epochs
-num_train_epochs=6
+# Increase temperature for more diverse feedback
+payload["temperature"] = 0.5
 
-# Ensemble multiple models
-# Train 3-5 models with different seeds, average predictions
-
-# Fine-tune on domain-specific data
-# If you have resumes from specific industry, fine-tune further
-
-# Address challenging categories
-# Collect more Automobile, Apparel, Agriculture samples
-# Consider splitting broad categories into subcategories
+# Multi-model ensemble
+def ensemble_matching(resume, jd):
+    models = ["mistral-7b", "llama-2-13b", "claude-3-haiku"]
+    scores = []
+    
+    for model in models:
+        feedback = call_openrouter_with_model(resume, jd, model)
+        scores.append(feedback['match_score'])
+    
+    return {
+        'average_score': np.mean(scores),
+        'consensus': np.std(scores) < 10  # High agreement
+    }
 ```
 
 ### For Production Deployment
 
 ```python
-# ONNX export for cross-platform inference
-from optimum.onnxruntime import ORTModelForSequenceClassification
+# Async processing
+import asyncio
+import aiohttp
 
-model = ORTModelForSequenceClassification.from_pretrained(
-    "./model",
-    export=True
-)
-# 2-3x faster inference
+async def async_screen_resumes(resumes, jd):
+    # DistilBERT in sync (fast enough)
+    classified = [predict_category(r) for r in resumes]
+    
+    # LLM calls in parallel
+    tasks = [
+        async_call_openrouter(build_prompt(r, jd, cat, conf))
+        for r, cat, conf in classified
+    ]
+    
+    feedbacks = await asyncio.gather(*tasks)
+    return list(zip(resumes, feedbacks))
+
+# Caching frequent JDs
+from functools import lru_cache
+
+@lru_cache(maxsize=100)
+def cached_jd_analysis(jd_hash):
+    # Cache JD embeddings or analysis
+    return analyze_jd(jd_hash)
+
+# Rate limiting
+from ratelimit import limits, sleep_and_retry
+
+@sleep_and_retry
+@limits(calls=30, period=60)
+def rate_limited_openrouter(prompt):
+    return call_openrouter(prompt)
 ```
 
+### Privacy Protection
+
+**Data Handling**:
+- Encrypt resume data in transit/storage
+- Clear data retention policies
+- GDPR/privacy law compliance
+- Candidate consent required
+
+**API Security**:
+```python
+# Don't log sensitive data
+def secure_call_openrouter(prompt):
+    # Remove PII before API call
+    sanitized_prompt = remove_pii(prompt)
+    
+    response = call_openrouter(sanitized_prompt)
+    
+    # Don't store API responses long-term
+    return response  # Process and discard
+```
 ## Future Improvements
 
-1. **Hierarchical Classification**: 
-   - Level 1: Broad categories (Technical, Business, Creative, Service, Manual)
-   - Level 2: Specific roles within each category
-   - Would help with Automobile, Digital-Media confusion
+1. **Advanced NLP**:
+   - Named Entity Recognition (skills, companies, degrees)
+   - Semantic similarity scoring
+   - Keyword extraction and matching
 
-2. **Entity Recognition**: Extract skills, companies, roles for better understanding
+2. **Multi-Modal Analysis**:
+   - Portfolio/work samples evaluation
+   - Video resume analysis
+   - GitHub/LinkedIn integration
 
-3. **Multi-Task Learning**: Simultaneous classification + experience level prediction
+3. **Predictive Analytics**:
+   - Success probability prediction
+   - Flight risk assessment
+   - Cultural fit scoring
 
-4. **Active Learning**: Prioritize uncertain predictions for human labeling (especially Automobile, Apparel)
+4. **Interactive Features**:
+   - Chatbot for candidate questions
+   - Interview question generation
+   - Automated scheduling
 
-5. **Cross-Lingual**: Support resumes in multiple languages
+5. **Integration Capabilities**:
+   - ATS (Applicant Tracking System) integration
+   - LinkedIn/Indeed API connections
+   - Calendar and email automation
 
-6. **Skill Extraction**: Not just category, but list specific skills found
-
-7. **Experience Level**: Junior/Mid/Senior classification
-
-8. **Explainability**: Highlight which resume sections influenced prediction
-
-9. **Category Refinement**: 
-   - Split Automobile into subcategories (Engineering, Sales, Design)
-   - Merge similar low-performing categories (Advocate + Public Relations)
-
-10. **Integration**: Connect with ATS (Applicant Tracking Systems)
-
-## API Deployment Example
-
-```python
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-
-@app.route('/classify', methods=['POST'])
-def classify_api():
-    data = request.json
-    resume_text = data.get('resume_text', '')
-    
-    if not resume_text:
-        return jsonify({'error': 'No resume text provided'}), 400
-    
-    category, confidence, top3 = classify_resume(resume_text)
-    
-    # Flag low-confidence predictions
-    needs_review = confidence < 70
-    
-    return jsonify({
-        'predicted_category': category,
-        'confidence': round(confidence, 2),
-        'needs_manual_review': needs_review,
-        'top_3_predictions': [
-            {'category': cat, 'probability': round(prob, 2)}
-            for cat, prob in top3
-        ]
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-```
-
-**Usage**:
-```bash
-curl -X POST http://localhost:5000/classify \
-  -H "Content-Type: application/json" \
-  -d '{"resume_text": "Software engineer with Python..."}'
-```
+6. **Enhanced Feedback**:
+   - Detailed skill gap roadmaps
+   - Course recommendations
+   - Timeline to job-readiness
 
 ## References
 
 - **DistilBERT Paper**: [DistilBERT, a distilled version of BERT](https://arxiv.org/abs/1910.01108)
-- **BERT Paper**: [BERT: Pre-training of Deep Bidirectional Transformers](https://arxiv.org/abs/1810.04805)
-- **Dataset**: [Sneha Anbhawal (Kaggle)](https://www.kaggle.com/datasets/snehaanbhawal/resume-dataset)
-- **Transformers Docs**: [Text Classification](https://huggingface.co/docs/transformers/tasks/sequence_classification)
+- **Mistral-7B**: [Mistral 7B](https://arxiv.org/abs/2310.06825)
+- **Dataset**: [Resume Dataset (Kaggle)](https://www.kaggle.com/datasets/snehaanbhawal/resume-dataset)
+- **OpenRouter**: [OpenRouter AI](https://openrouter.ai/)
 
 ## License
 
-This project is licensed under the MIT License. DistilBERT is licensed under Apache 2.0.
+This project is licensed under the MIT License.
+- DistilBERT: Apache 2.0
+- Mistral-7B: Apache 2.0
+- Dataset: Subject to Kaggle terms
 
 ## Acknowledgments
 
 - **Dataset**: Sneha Anbhawal (Kaggle)
-- **Model**: Hugging Face (DistilBERT)
-- **Framework**: PyTorch + Transformers
+- **DistilBERT**: Hugging Face
+- **Mistral**: Mistral AI
+- **API**: OpenRouter
 - **Community**: Open-source contributors
 
 ---
 
-**Task**: Multi-Class Text Classification (24 categories) | **Accuracy**: 87.67% | **Model**: DistilBERT | **Last Updated**: December 2024
+**System**: Resume-JD Matching (DistilBERT + LLM) | **Accuracy**: 87.67% | **Categories**: 24 | **Last Updated**: December 2025
 
-**⚠️ Important Note**: This model is designed to assist HR professionals in initial resume screening. It should NOT be the sole basis for hiring decisions. Always combine AI predictions with human judgment, interviews, and comprehensive evaluation. The model may exhibit biases present in training data and should be regularly audited for fairness. Categories with lower performance (Automobile: 55%, Apparel: 70%, Agriculture: 69%) require additional manual review.
+**⚠️ Disclaimer**: This system is designed to assist HR professionals in resume screening. It should NOT be the sole basis for hiring decisions. Always combine AI predictions with human judgment, interviews, credential verification, and comprehensive candidate evaluation. The system may exhibit biases from training data and should be regularly audited for fairness. Low-performing categories (Automobile, Apparel, Agriculture) require additional manual review.
