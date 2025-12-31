@@ -53,8 +53,6 @@ Real-time urban object detection with SSD300.
 Each project is self-contained in its own directory with:
 - Complete source code
 - Detailed README with setup instructions
-- Training scripts and pre-trained models (where applicable)
-- Example usage and demos
 
 ### General Requirements
 
@@ -203,4 +201,4 @@ Individual projects may have different licenses. Check each project's README for
 
 ⭐ **Star this repo** if you find it helpful!
 
-**Last Updated**: December 2024
+**Last Updated**: December 2025
